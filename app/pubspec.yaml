@@ -1,0 +1,29 @@
+name: ypn_vpn
+description: YPN VPN — fast, private, censorship-resistant VPN.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.15.0
+  wireguard_flutter: ^0.1.3
+  flutter_v2ray_client: ^3.5.0
+  google_mobile_ads: ^7.0.0
+  in_app_purchase: ^3.2.3
+  cryptography: ^2.7.0
+  provider: ^6.1.2
+  shared_preferences: ^2.3.0
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

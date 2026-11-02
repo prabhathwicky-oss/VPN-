@@ -1,0 +1,40 @@
+project_id = "ypn-vpn"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "https://example.com"
+enable_signup = true
+enable_anonymous_sign_ins = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+# Functions called by the mobile app verify the user's JWT.
+[functions.app-bootstrap]
+verify_jwt = true
+
+[functions.vpn-connect]
+verify_jwt = true
+
+[functions.vpn-disconnect]
+verify_jwt = true
+
+[functions.billing-verify]
+verify_jwt = true
+
+# Called by VPN servers (own secret) and Google Pub/Sub (own token).
+[functions.node-api]
+verify_jwt = false
+
+[functions.play-rtdn]
+verify_jwt = false

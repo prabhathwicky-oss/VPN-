@@ -1,0 +1,29 @@
+# Flutter (android/ is generated in CI by `flutter create`)
+app/android/
+app/ios/
+app/.dart_tool/
+app/build/
+app/.flutter-plugins*
+app/.metadata
+app/pubspec.lock
+app/test/widget_test.dart
+
+# Node
+admin/node_modules/
+admin/.next/
+admin/.env
+admin/.env*.local
+admin/public/install.sh
+admin/public/agent.py
+admin/next-env.d.ts
+admin/*.tsbuildinfo
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Secrets
+*.jks
+*.keystore
+.env
+dist/

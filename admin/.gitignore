@@ -1,0 +1,8 @@
+node_modules
+.next
+.env*.local
+.env
+public/install.sh
+public/agent.py
+next-env.d.ts
+*.tsbuildinfo

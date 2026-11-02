@@ -1,0 +1,49 @@
+name: Backend (Supabase)
+
+# Applies database migrations and deploys all edge functions.
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/**", ".github/workflows/backend.yml"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Check secrets
+        run: |
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD PROJECT_REF; do
+            if [ -z "${!v}" ]; then echo "::error::Missing secret for $v"; exit 1; fi
+          done
+
+      - name: Link project
+        run: supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Apply database migrations
+        run: supabase db push --password "$SUPABASE_DB_PASSWORD" --include-all
+
+      - name: Set function secrets
+        env:
+          PLAY_PACKAGE_NAME: ${{ vars.ANDROID_PACKAGE || 'com.ypnvpn.app' }}
+          RTDN_TOKEN: ${{ secrets.RTDN_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          ARGS=("PLAY_PACKAGE_NAME=$PLAY_PACKAGE_NAME")
+          [ -n "$RTDN_TOKEN" ] && ARGS+=("RTDN_TOKEN=$RTDN_TOKEN")
+          [ -n "$GOOGLE_SERVICE_ACCOUNT_JSON" ] && ARGS+=("GOOGLE_SERVICE_ACCOUNT_JSON=$GOOGLE_SERVICE_ACCOUNT_JSON")
+          supabase secrets set --project-ref "$PROJECT_REF" "${ARGS[@]}"
+
+      - name: Deploy edge functions
+        run: supabase functions deploy --project-ref "$PROJECT_REF"

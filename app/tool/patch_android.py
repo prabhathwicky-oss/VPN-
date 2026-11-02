@@ -121,8 +121,41 @@ def patch_gradle_properties():
     open(path, "w").write(s)
 
 
+ROOT_GRADLE_BLOCK = '''// YPN: some VPN plugins pin an old compileSdk (e.g. wireguard_flutter -> 31), which
+// breaks modern AndroidX dependencies. Lift every plugin library to SDK 36.
+subprojects {
+    if (name != "app") {
+        val liftSdk: Project.() -> Unit = {
+            extensions.findByName("android")?.withGroovyBuilder { "compileSdkVersion"(36) }
+        }
+        if (state.executed) liftSdk() else afterEvaluate { liftSdk() }
+    }
+}
+
+'''
+
+
+def patch_root_gradle():
+    kts = os.path.join(ANDROID, "build.gradle.kts")
+    groovy = os.path.join(ANDROID, "build.gradle")
+    if os.path.exists(kts):
+        s = open(kts).read()
+        if "YPN: some VPN plugins" not in s:
+            # Prepend so our afterEvaluate hook is registered before plugin projects evaluate.
+            s = ROOT_GRADLE_BLOCK + s
+        open(kts, "w").write(s)
+    elif os.path.exists(groovy):
+        s = open(groovy).read()
+        if "YPN: some VPN plugins" not in s:
+            s = ('// YPN: some VPN plugins pin an old compileSdk\n'
+                 'subprojects { if (name != "app") { afterEvaluate { if (it.hasProperty("android")) '
+                 '{ it.android.compileSdkVersion 36 } } } }\n\n') + s
+        open(groovy, "w").write(s)
+
+
 if __name__ == "__main__":
     patch_gradle()
+    patch_root_gradle()
     patch_manifest()
     copy_overrides()
     patch_gradle_properties()

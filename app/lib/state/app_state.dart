@@ -265,7 +265,7 @@ class AppState extends ChangeNotifier {
     _health?.cancel();
     _health = Timer.periodic(const Duration(seconds: 45), (_) => _periodicHealth());
     _refresh?.cancel();
-    _refresh = Timer.periodic(const Duration(minutes: 2), (_) => refresh());
+    _refresh = Timer.periodic(const Duration(minutes: 10), (_) => refresh());
     storage.connectCount = storage.connectCount + 1;
     if (showAds && (boot?.ads.interstitial ?? false) &&
         storage.connectCount % (boot?.ads.interstitialEvery ?? 2) == 0) {

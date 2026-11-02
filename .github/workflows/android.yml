@@ -67,8 +67,8 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          D_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          D_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          D_SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://qtrzlnkcotfxpavvhwig.supabase.co' }}
+          D_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0cnpsbmtjb3RmeHBhdnZod2lnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2MDY3MTAsImV4cCI6MjEwOTE4MjcxMH0.-oMB8hjdAjqYS3KWGGTB2oO3YbAKGi-8AlSOEh7t2sI' }}
           D_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
           D_ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
           D_PRIVACY_URL: ${{ vars.PRIVACY_URL }}

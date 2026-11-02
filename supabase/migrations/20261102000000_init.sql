@@ -6,7 +6,7 @@
 -- =====================================================================
 
 create extension if not exists pgcrypto;
-create extension if not exists pg_cron;
+create extension if not exists pg_cron with schema pg_catalog;
 
 -- ---------------------------------------------------------------------
 -- Profiles (one per auth user, including anonymous users)
@@ -587,3 +587,29 @@ returns table (
 $$;
 revoke all on function public.admin_users(text, int, int) from public, anon, authenticated;
 grant execute on function public.admin_users(text, int, int) to service_role;
+
+-- Business-logic functions are for the service role (edge functions) only.
+revoke execute on function public.pick_node(uuid, text, text, uuid[]) from public, anon, authenticated;
+revoke execute on function public.create_wg_peer(uuid, uuid, uuid, text) from public, anon, authenticated;
+revoke execute on function public.create_vless_peer(uuid, uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.node_desired_state(uuid) from public, anon, authenticated;
+revoke execute on function public.node_report(uuid, jsonb) from public, anon, authenticated;
+revoke execute on function public.monitor_tick() from public, anon, authenticated;
+revoke execute on function public.prune_tick() from public, anon, authenticated;
+revoke execute on function public.usage_today(uuid) from public, anon, authenticated;
+revoke execute on function public.over_free_quota(uuid) from public, anon, authenticated;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.is_admin() from public, anon;
+grant execute on function public.is_admin() to authenticated, service_role;
+
+alter function public.prune_tick() set search_path = public;
+alter function public.effective_plan(public.profiles) set search_path = public;
+alter function public.usage_today(uuid) set search_path = public;
+alter function public.over_free_quota(uuid) set search_path = public;
+alter function public.cfg(text) set search_path = public;
+alter function public.pick_node(uuid, text, text, uuid[]) set search_path = public;
+alter function public.create_wg_peer(uuid, uuid, uuid, text) set search_path = public;
+alter function public.create_vless_peer(uuid, uuid, uuid) set search_path = public;
+alter function public.node_desired_state(uuid) set search_path = public;
+alter function public.node_report(uuid, jsonb) set search_path = public, pg_temp;
+alter function public.monitor_tick() set search_path = public;

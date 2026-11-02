@@ -39,8 +39,8 @@ WG_IFACE = "wg0"
 WG_PUBKEY_PATH = "/etc/wireguard/publickey"
 WG_NET = "10.66"
 
-SYNC_INTERVAL = 20
-REPORT_INTERVAL = 60
+SYNC_INTERVAL = 60      # new peers arrive instantly via /poke; this is only a safety net
+REPORT_INTERVAL = 120
 
 log = logging.getLogger("ypn-agent")
 

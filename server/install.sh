@@ -32,7 +32,7 @@ done
 
 [[ $EUID -eq 0 ]] || { echo "Run as root (sudo)."; exit 1; }
 [[ -n "$API" && -n "$TOKEN" ]] || { echo "--api and --token are required"; exit 1; }
-[[ -n "$AGENT_URL" ]] || AGENT_URL="${INSTALL_BASE_URL:-}/agent.py"
+[[ -n "$AGENT_URL" ]] || AGENT_URL="${INSTALL_BASE_URL:-https://raw.githubusercontent.com/prabhathwicky-oss/VPN-/main/server}/agent.py"
 
 log() { echo -e "\033[1;36m==>\033[0m $*"; }
 
@@ -59,6 +59,22 @@ sysctl --system >/dev/null
 DEF_IF=$(ip -4 route show default | awk '{for(i=1;i<=NF;i++) if($i=="dev"){print $(i+1); exit}}')
 [[ -n "$DEF_IF" ]] || { echo "Could not detect default interface"; exit 1; }
 
+# --------------------------------------------------------------------------- host firewall
+# Oracle Cloud (and some other) Ubuntu images ship iptables rules that REJECT
+# everything except SSH. Open our ports above that rule and persist them.
+log "Opening ports $WG_PORT/udp, $XRAY_PORT/tcp, $AGENT_PORT/tcp in the host firewall"
+open_port() {
+  iptables -C INPUT -p "$1" --dport "$2" -j ACCEPT 2>/dev/null || iptables -I INPUT -p "$1" --dport "$2" -j ACCEPT
+}
+open_port udp "$WG_PORT"
+open_port tcp "$XRAY_PORT"
+open_port tcp "$AGENT_PORT"
+if command -v netfilter-persistent >/dev/null 2>&1; then
+  netfilter-persistent save >/dev/null 2>&1 || true
+elif [[ -d /etc/iptables ]]; then
+  iptables-save > /etc/iptables/rules.v4
+fi
+
 # --------------------------------------------------------------------------- WireGuard
 log "Configuring WireGuard on :$WG_PORT"
 mkdir -p /etc/wireguard && chmod 700 /etc/wireguard
@@ -67,12 +83,15 @@ if [[ ! -f /etc/wireguard/privatekey ]]; then
 fi
 wg pubkey < /etc/wireguard/privatekey > /etc/wireguard/publickey
 
+# Rules are inserted (-I) so they sit above any provider default REJECT rule
+# (Oracle Cloud images end the FORWARD chain with REJECT). Inserted in reverse:
+# the last one inserted ends up first.
 FW_UP="iptables -t nat -A POSTROUTING -s 10.66.0.0/16 -o $DEF_IF -j MASQUERADE"
-FW_UP+="; iptables -I FORWARD -i wg0 -o wg0 -j DROP"
-FW_UP+="; iptables -I FORWARD -i wg0 -d 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16,100.64.0.0/10 -j DROP"
+FW_UP+="; iptables -I FORWARD -o wg0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
+FW_UP+="; iptables -I FORWARD -i wg0 -j ACCEPT"
 FW_UP+="; iptables -I FORWARD -i wg0 -p tcp --dport 25 -j DROP"
-FW_UP+="; iptables -A FORWARD -i wg0 -j ACCEPT"
-FW_UP+="; iptables -A FORWARD -o wg0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT"
+FW_UP+="; iptables -I FORWARD -i wg0 -d 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16,100.64.0.0/10 -j DROP"
+FW_UP+="; iptables -I FORWARD -i wg0 -o wg0 -j DROP"
 FW_UP+="; iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu"
 FW_DOWN="${FW_UP//-A /-D }"; FW_DOWN="${FW_DOWN//-I /-D }"
 

@@ -133,7 +133,7 @@ class Bootstrap {
     return Bootstrap(
       userId: user['id'] as String? ?? '',
       isAnonymous: user['is_anonymous'] == true,
-      email: user['email'] as String?,
+      email: (user['email'] as String?)?.isEmpty ?? true ? null : user['email'] as String,
       plan: PlanInfo.fromJson((j['plan'] as Map?)?.cast<String, dynamic>() ?? {}),
       ads: AdsConfig.fromJson((j['ads'] as Map?)?.cast<String, dynamic>()),
       allowedProtocols: ((protocols['allowed'] as List?) ?? const ['wireguard', 'vless']).cast<String>(),

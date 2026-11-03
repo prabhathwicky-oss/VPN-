@@ -117,5 +117,8 @@ Deno.serve(handler(async (req) => {
     }
   }
 
-  throw new HttpError(503, "no_capacity", "All servers are busy right now. Please try another location.");
+  const { count } = await db.from("nodes").select("id", { count: "exact", head: true }).eq("status", "active");
+  throw new HttpError(503, "no_capacity", count
+    ? "All servers are busy right now. Please try another location."
+    : "No servers are online right now. Please try again in a few minutes.");
 }));
